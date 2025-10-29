@@ -121,11 +121,16 @@ const ModernEcommerce = () => {
                     <div className="text-6xl mb-4">❌</div>
                     <h3 className="text-2xl font-bold text-red-600 mb-2">Oops! Something went wrong</h3>
                     <p className="text-gray-600">Unable to load data. Please try again later.</p>
-                    {(categoriesError || productsError) && (
-                        <p className="text-sm text-gray-500 mt-2">
-                            {categoriesError?.message || productsError?.message || productsError?.data || productsError || 'Unknown error'}
-                        </p>
-                    )}
+                  {(categoriesError || productsError) && (
+  <p className="text-sm text-gray-500 mt-2">
+    {categoriesError?.message 
+      || productsError?.message 
+      || (productsError?.data ? JSON.stringify(productsError.data) : null) 
+      || JSON.stringify(productsError) 
+      || 'Unknown error'}
+  </p>
+)}
+
                 </div>
             </div>
         );
