@@ -32,8 +32,8 @@ import {
 const getFullImageUrl = (imagePath) => {
   if (!imagePath) return null;
   if (imagePath.startsWith('http')) return imagePath;
-  if (imagePath.startsWith('/')) return `${import.meta.VITE_API_URL}${imagePath}`;
-  return `${import.meta.VITE_API_URL}/${imagePath}`;
+  if (imagePath.startsWith('/')) return `${import.meta.env.VITE_API_URL}${imagePath}`;
+  return `${import.meta.env.VITE_API_URL}/${imagePath}`;
 };
 
 export default function ProductDetail({ images = [] }) {
@@ -150,7 +150,7 @@ Please confirm my order!`;
   if (!currentProduct?._id) return;
 
   try {
-    const response = await fetch(`${import.meta.VITE_API_URL}/api/products/${currentProduct._id}/pdf`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${currentProduct._id}/pdf`, {
       method: 'GET',
     });
 
