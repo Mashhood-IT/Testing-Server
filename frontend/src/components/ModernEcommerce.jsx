@@ -123,7 +123,7 @@ const ModernEcommerce = () => {
                     <p className="text-gray-600">Unable to load data. Please try again later.</p>
                     {(categoriesError || productsError) && (
                         <p className="text-sm text-gray-500 mt-2">
-                            {categoriesError?.message || productsError?.message || 'Unknown error'}
+                            {categoriesError?.message || productsError?.message || productsError?.data || productsError || 'Unknown error'}
                         </p>
                     )}
                 </div>

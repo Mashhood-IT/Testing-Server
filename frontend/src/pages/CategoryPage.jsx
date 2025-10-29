@@ -76,7 +76,7 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Oops! Something went wrong</h3>
-          <p className="text-gray-600">{error?.data?.message || "Unable to load products"}</p>
+          <p className="text-gray-600">{error?.data?.message || error?.message || error?.data || "Unable to load products"}</p>
         </div>
       </div>
     );
