@@ -5,7 +5,6 @@ import {
   useGetProductsQuery,
 } from "../features/catalog/catalogApi";
 
-const API_BASE_URL = "http://localhost:5000";
 
 const CategoryPage = () => {
   const { id } = useParams();
@@ -38,7 +37,7 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
 
     if (imageUrl) {
       if (imageUrl.startsWith("/")) {
-        return `${API_BASE_URL}${imageUrl}`;
+        return `${import.meta.env.VITE_API_URL}${imageUrl}`;
       }
       return imageUrl;
     }

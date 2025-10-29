@@ -28,12 +28,17 @@ import {
 } from "lucide-react";
 
 
-
 const getFullImageUrl = (imagePath) => {
   if (!imagePath) return null;
-  if (imagePath.startsWith('http')) return imagePath;
-  if (imagePath.startsWith('/')) return `${import.meta.env.VITE_API_URL}${imagePath}`;
-  return `${import.meta.env.VITE_API_URL}/${imagePath}`;
+  if (imagePath.startsWith('http')) return imagePath; // Already full URL (Cloudinary)
+  
+  // For local uploads on Render
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://testing-server-1-erb6.onrender.com';
+  
+  if (imagePath.startsWith('/')) {
+    return `${baseUrl}${imagePath}`;
+  }
+  return `${baseUrl}/${imagePath}`;
 };
 
 export default function ProductDetail({ images = [] }) {

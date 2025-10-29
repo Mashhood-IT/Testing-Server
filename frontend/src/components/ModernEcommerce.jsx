@@ -4,7 +4,6 @@ import { useGetCategoriesQuery, useGetProductsQuery } from '../features/catalog/
 import { useNavigate } from "react-router-dom"; // ✅ add this at the top
 
 // Base API URL - adjust this to match your backend URL
-const API_BASE_URL = 'http://localhost:5000'; // Change this to your backend URL
 
 const ModernEcommerce = () => {
     const navigate = useNavigate();
@@ -62,7 +61,7 @@ const ModernEcommerce = () => {
         // If image exists and is a relative path, prepend base URL
         if (imageUrl) {
             if (imageUrl.startsWith('/')) {
-                return `${API_BASE_URL}${imageUrl}`;
+                return `${import.meta.env.VITE_API_URL}${imageUrl}`;
             }
             return imageUrl;
         }
