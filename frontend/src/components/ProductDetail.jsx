@@ -155,7 +155,7 @@ Please confirm my order!`;
   if (!currentProduct?._id) return;
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${currentProduct._id}/pdf`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/products/${currentProduct._id}/pdf`, {
       method: 'GET',
     });
 
