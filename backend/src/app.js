@@ -40,7 +40,7 @@ const app = express();
 //  Global Middleware
 // -----------------------------
 app.use(cors( {
-  origin : "https://safnsafl.netlify.app"
+  origin : "*"
 })); // allow frontend requests
 // app.use(helmet()); // secure HTTP headers
 app.use(morgan("dev")); // log all requests
