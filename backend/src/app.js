@@ -39,7 +39,9 @@ const app = express();
 // -----------------------------
 //  Global Middleware
 // -----------------------------
-app.use(cors()); // allow frontend requests
+app.use(cors({
+  origin: "*"
+})); // allow frontend requests
 // app.use(helmet()); // secure HTTP headers
 app.use(morgan("dev")); // log all requests
 app.use(express.json()); // parse JSON bodies

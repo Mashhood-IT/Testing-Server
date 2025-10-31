@@ -1,5 +1,5 @@
 import fs from "fs";
-import express from "express"
+import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import http from "http";
@@ -7,16 +7,19 @@ import app from "./src/app.js";
 import connectDB from "./src/config/db.js";
 import { createSuperAdmin } from "./src/utils/createSuperAdmin.js";
 import { fileURLToPath } from "url";
-import cors from "cors"
-dotenv.config()
-
+import cors from "cors";
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json())
+app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use(cors())
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 // -----------------------------
 //  PORT CONFIG
 // -----------------------------
