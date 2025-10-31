@@ -936,7 +936,7 @@ export default function Products() {
                         <button
                           onClick={() => handleDelete(p._id)}
                           disabled={deleting}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm disabled:opacity-50"
+                          className="flex-1 flex text items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm disabled:opacity-50"
                         >
                           <X size={16} /> {deleting ? "Deleting..." : "Delete"}
                         </button>
