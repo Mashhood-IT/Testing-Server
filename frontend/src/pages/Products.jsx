@@ -5,6 +5,7 @@ import {
   useUpdateProductMutation,
   useUploadImagesMutation,
   useGetCategoriesQuery,
+  useDeleteProductMutation,
 } from "../features/catalog/catalogApi";
 import {
   Upload,
@@ -21,17 +22,18 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+const API_BASE_URL = "http://localhost:5000";
 
 const getFullImageUrl = (imagePath) => {
   if (!imagePath) return null;
 
   // normalize: fix backslashes, trim spaces, remove duplicate leading slashes
-  const raw = String(imagePath).trim().replace(/\\/g, '/');
+  const raw = String(imagePath).trim().replace(/\\/g, "/");
   if (/^https?:\/\//i.test(raw)) return raw;
 
   // some backends store as '/uploads/...' or 'uploads/...'
-  const clean = raw.replace(/^\/+/, '');
-  return `${import.meta.env.VITE_API_URL}/${clean}`;
+  const clean = raw.replace(/^\/+/, "");
+  return `${API_BASE_URL}/${clean}`;
 };
 export default function Products() {
   const [page, setPage] = useState(1);
@@ -39,6 +41,7 @@ export default function Products() {
   const { data: cats } = useGetCategoriesQuery();
   const [createProduct, { isLoading: saving }] = useCreateProductMutation();
   const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
+  const [deleteProduct, { isLoading: deleting }] = useDeleteProductMutation();
   const [uploadImages] = useUploadImagesMutation();
 
   const [editingId, setEditingId] = useState(null);
@@ -52,18 +55,18 @@ export default function Products() {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfUrl, setPdfUrl] = useState("");
   const catOptions = useMemo(() => cats || [], [cats]);
-const [specs, setSpecs] = useState([{ label: "", value: "" }]);
-const [faqs, setFaqs] = useState([{ question: "", answer: "" }]);
+  const [specs, setSpecs] = useState([{ label: "", value: "" }]);
+  const [faqs, setFaqs] = useState([{ question: "", answer: "" }]);
 
-const [tabsData, setTabsData] = useState([
-  { tab: "", tabName: "", tabDescription: "" },
-]);
-const [productAdditional, setProductAdditional] = useState({
-  tagline: "",
-  title2: "",
-  subTitle2: "",
-  description2: "",
-});
+  const [tabsData, setTabsData] = useState([
+    { tab: "", tabName: "", tabDescription: "" },
+  ]);
+  const [productAdditional, setProductAdditional] = useState({
+    tagline: "",
+    title2: "",
+    subTitle2: "",
+    description2: "",
+  });
 
   const resetForm = () => {
     setTitle("");
@@ -72,51 +75,56 @@ const [productAdditional, setProductAdditional] = useState({
     setStock("");
     setDesc("");
     setPdfFile(null);
-setPdfUrl("");
+    setPdfUrl("");
     setFiles([]);
     setExistingImages([]);
     setEditingId(null);
     setTabsData([{ tab: "", tabName: "", tabDescription: "" }]);
-    setProductAdditional({ tagline: "", title2: "", subTitle2: "", description2: "" });
-setSpecs([{ label: "", value: "" }]);
-setFaqs([{ question: "", answer: "" }]);
+    setProductAdditional({
+      tagline: "",
+      title2: "",
+      subTitle2: "",
+      description2: "",
+    });
+    setSpecs([{ label: "", value: "" }]);
+    setFaqs([{ question: "", answer: "" }]);
   };
 
   const submit = async (e) => {
     e.preventDefault();
     let newImages = [];
-let uploadedPdfUrl = pdfUrl;
-const cleanedSpecs = (specs || []).filter(
-  s => (s.label || "").trim() || (s.value || "").trim()
-);
-const cleanedFaqs = (faqs || []).filter(
-  f => (f.question || "").trim() || (f.answer || "").trim()
-);
+    let uploadedPdfUrl = pdfUrl;
+    const cleanedSpecs = (specs || []).filter(
+      (s) => (s.label || "").trim() || (s.value || "").trim()
+    );
+    const cleanedFaqs = (faqs || []).filter(
+      (f) => (f.question || "").trim() || (f.answer || "").trim()
+    );
 
-  if (pdfFile) {
-    const pdfForm = new FormData();
-    pdfForm.append("pdf", pdfFile);
-    const pdfUploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/upload/pdf`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: pdfForm,
-    });
+    if (pdfFile) {
+      const pdfForm = new FormData();
+      pdfForm.append("pdf", pdfFile);
+      const pdfUploadResponse = await fetch(`${API_BASE_URL}/api/upload/pdf`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: pdfForm,
+      });
 
-    const result = await pdfUploadResponse.json();
+      const result = await pdfUploadResponse.json();
 
-    uploadedPdfUrl = result.url;
-  }
+      uploadedPdfUrl = result.url;
+    }
 
-  if (files && files.length) {
-    const form = new FormData();
-    [...files].forEach((f) => form.append("images", f));
-    const up = await uploadImages(form).unwrap();
-    newImages = up.urls;
-  }
+    if (files && files.length) {
+      const form = new FormData();
+      [...files].forEach((f) => form.append("images", f));
+      const up = await uploadImages(form).unwrap();
+      newImages = up.urls;
+    }
 
-  const finalImages = [...existingImages, ...newImages];
+    const finalImages = [...existingImages, ...newImages];
     if (editingId) {
       await updateProduct({
         id: editingId,
@@ -128,10 +136,10 @@ const cleanedFaqs = (faqs || []).filter(
           description: desc,
           images: finalImages,
           pdf: uploadedPdfUrl || "",
-           tabs: tabsData,  
-            productAdditional,
-              specs: cleanedSpecs,
-    faqs: cleanedFaqs, 
+          tabs: tabsData,
+          productAdditional,
+          specs: cleanedSpecs,
+          faqs: cleanedFaqs,
         },
       }).unwrap();
     } else {
@@ -142,11 +150,11 @@ const cleanedFaqs = (faqs || []).filter(
         stock: Number(stock || 0),
         description: desc,
         images: finalImages,
-         productAdditional,
+        productAdditional,
         pdf: uploadedPdfUrl || "",
-          tabs: tabsData,  
-            specs: cleanedSpecs,
-    faqs: cleanedFaqs, 
+        tabs: tabsData,
+        specs: cleanedSpecs,
+        faqs: cleanedFaqs,
       }).unwrap();
     }
 
@@ -154,41 +162,57 @@ const cleanedFaqs = (faqs || []).filter(
     refetch();
   };
 
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await deleteProduct(id).unwrap();
+      alert("Product deleted successfully!");
+      refetch();
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Failed to delete product. Please try again.");
+    }
+  };
+
   const handleEdit = (p) => {
     setEditingId(p._id);
     setTitle(p.title);
     setSlug(p.slug);
     setPdfUrl(p.pdf || "");
-setPdfFile(null);
+    setPdfFile(null);
     setCategory(p.category?._id || "");
     setStock(p.stock);
     setDesc(p.description);
     setExistingImages(p.images || []);
     setFiles([]);
     setSpecs(
-  Array.isArray(p.specs) && p.specs.length
-    ? p.specs
-    : [{ label: "", value: "" }]
-);
+      Array.isArray(p.specs) && p.specs.length
+        ? p.specs
+        : [{ label: "", value: "" }]
+    );
 
-setFaqs(
-  Array.isArray(p.faqs) && p.faqs.length
-    ? p.faqs
-    : [{ question: "", answer: "" }]
-);
+    setFaqs(
+      Array.isArray(p.faqs) && p.faqs.length
+        ? p.faqs
+        : [{ question: "", answer: "" }]
+    );
 
     setProductAdditional({
-  tagline: p.productAdditional?.tagline || "",
-  title2: p.productAdditional?.title2 || "",
-  subTitle2: p.productAdditional?.subTitle2 || "",
-  description2: p.productAdditional?.description2 || "",
-});
+      tagline: p.productAdditional?.tagline || "",
+      title2: p.productAdditional?.title2 || "",
+      subTitle2: p.productAdditional?.subTitle2 || "",
+      description2: p.productAdditional?.description2 || "",
+    });
 
-     setTabsData(
-  Array.isArray(p.tabs) && p.tabs.length
-     ? p.tabs
-     : [{ tab: "", tabName: "", tabDescription: "" }]
- );
+    setTabsData(
+      Array.isArray(p.tabs) && p.tabs.length
+        ? p.tabs
+        : [{ tab: "", tabName: "", tabDescription: "" }]
+    );
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -237,7 +261,8 @@ setFaqs(
               {editingId ? "Edit Product" : "Add New Product"}
             </h2>
             <p className="text-indigo-100 text-xs sm:text-sm mt-1">
-              Fill in the details below to {editingId ? "update" : "create"} a product
+              Fill in the details below to {editingId ? "update" : "create"} a
+              product
             </p>
           </div>
 
@@ -295,7 +320,7 @@ setFaqs(
                   ))}
                 </select>
               </div>
-                 <div className="space-y-2">
+              <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <Package className="w-4 h-4 text-blue-600" />
                   Stock Quantity
@@ -312,7 +337,7 @@ setFaqs(
                 />
               </div>
             </div>
-               <div className="space-y-2">
+            <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                 <FileText className="w-4 h-4 text-orange-600" />
                 Product Description
@@ -326,248 +351,292 @@ setFaqs(
                 required
               />
             </div>
-<div className="space-y-6 border-gray-200 border rounded-xl p-4 sm:p-6">
-  <label className="text-sm font-semibold text-gray-700">
-    Tabs Information
-  </label>
+            <div className="space-y-6 border-gray-200 border rounded-xl p-4 sm:p-6">
+              <label className="text-sm font-semibold text-gray-700">
+                Tabs Information
+              </label>
 
-  {tabsData.map((tab, index) => (
-    <div key={index} className="space-y-2   rounded-xl ">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <input
-          type="text"
-          
-          placeholder="Tab ID (e.g. description)"
-          value={tab.tab}
-          onChange={(e) => {
-            const newTabs = [...tabsData];
-            newTabs[index].tab = e.target.value;
-            setTabsData(newTabs);
-          }}
-          className="w-full border-2 border-gray-200 p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm sm:text-base"
-        />
-        <input
-          type="text"
-          placeholder="Tab Name (Heading)"
-          value={tab.tabName}
-          onChange={(e) => {
-            const newTabs = [...tabsData];
-            newTabs[index].tabName = e.target.value;
-            setTabsData(newTabs);
-          }}
-          className="w-full border-2 border-gray-200 p-2  rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm sm:text-base"
-        />
-        </div>
-      <textarea
-        placeholder="Tab Description"
-        value={tab.tabDescription}
-        onChange={(e) => {
-          const newTabs = [...tabsData];
-          newTabs[index].tabDescription = e.target.value;
-          setTabsData(newTabs);
-        }}
-        rows={4}
-        className="w-full border-2 border-gray-200 p-3 sm:p-4 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm sm:text-base"
-        required
-        />
+              {tabsData.map((tab, index) => (
+                <div key={index} className="space-y-2   rounded-xl ">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Tab ID (e.g. description)"
+                      value={tab.tab}
+                      onChange={(e) => {
+                        const newTabs = [...tabsData];
+                        newTabs[index].tab = e.target.value;
+                        setTabsData(newTabs);
+                      }}
+                      className="w-full border-2 border-gray-200 p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm sm:text-base"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Tab Name (Heading)"
+                      value={tab.tabName}
+                      onChange={(e) => {
+                        const newTabs = [...tabsData];
+                        newTabs[index].tabName = e.target.value;
+                        setTabsData(newTabs);
+                      }}
+                      className="w-full border-2 border-gray-200 p-2  rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm sm:text-base"
+                    />
+                  </div>
+                  <textarea
+                    placeholder="Tab Description"
+                    value={tab.tabDescription}
+                    onChange={(e) => {
+                      const newTabs = [...tabsData];
+                      newTabs[index].tabDescription = e.target.value;
+                      setTabsData(newTabs);
+                    }}
+                    rows={4}
+                    className="w-full border-2 border-gray-200 p-3 sm:p-4 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm sm:text-base"
+                    required
+                  />
 
-      <div className="flex justify-end gap-2">
-        {tabsData.length > 1 && (
-          <button
-            type="button"
-            onClick={() => {
-              const newTabs = tabsData.filter((_, i) => i !== index);
-              setTabsData(newTabs);
-            }}
-            className="bg-red-500 text-white rounded-md px-4 py-1 cursor-pointer  text-md"
-          >
-            Remove Tab
-          </button>
-        )}
-        {index === tabsData.length - 1 && (
-          <button
-            type="button"
-            onClick={() =>
-              setTabsData([...tabsData, { tab: "", tabName: "", tabDescription: "" }])
-            }
-            className="bg-indigo-600 text-white px-4 py-1 rounded-md cursor-pointer text-md"
-          >
-            Add Tab
-          </button>
-        )}
-      </div>
-    </div>
-  ))}
-</div>
-<div className=" space-y-4 bg-white rounded-2xl border border-gray-200 p-4 sm:p-6">
-  <h3 className="text-lg font-bold text-gray-800">Additional Description <span className="text-gray-400 text-sm font-normal">(Optional)</span></h3>
+                  <div className="flex justify-end gap-2">
+                    {tabsData.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newTabs = tabsData.filter(
+                            (_, i) => i !== index
+                          );
+                          setTabsData(newTabs);
+                        }}
+                        className="bg-red-500 text-white rounded-md px-4 py-1 cursor-pointer  text-md"
+                      >
+                        Remove Tab
+                      </button>
+                    )}
+                    {index === tabsData.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTabsData([
+                            ...tabsData,
+                            { tab: "", tabName: "", tabDescription: "" },
+                          ])
+                        }
+                        className="bg-indigo-600 text-white px-4 py-1 rounded-md cursor-pointer text-md"
+                      >
+                        Add Tab
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className=" space-y-4 bg-white rounded-2xl border border-gray-200 p-4 sm:p-6">
+              <h3 className="text-lg font-bold text-gray-800">
+                Additional Description{" "}
+                <span className="text-gray-400 text-sm font-normal">
+                  (Optional)
+                </span>
+              </h3>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div className="space-y-1">
-      <label className="text-sm font-semibold text-gray-700">Tagline</label>
-      <input
-        type="text"
-        value={productAdditional.tagline}
-        onChange={(e) =>
-          setProductAdditional((prev) => ({ ...prev, tagline: e.target.value }))
-        }
-        placeholder="Short punchline for the product"
-        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
-      />
-    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Tagline
+                  </label>
+                  <input
+                    type="text"
+                    value={productAdditional.tagline}
+                    onChange={(e) =>
+                      setProductAdditional((prev) => ({
+                        ...prev,
+                        tagline: e.target.value,
+                      }))
+                    }
+                    placeholder="Short punchline for the product"
+                    className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+                  />
+                </div>
 
-    <div className="space-y-1">
-      <label className="text-sm font-semibold text-gray-700">Title 2</label>
-      <input
-        type="text"
-        value={productAdditional.title2}
-        onChange={(e) =>
-          setProductAdditional((prev) => ({ ...prev, title2: e.target.value }))
-        }
-        placeholder="Secondary title (e.g., 'Modern Simplicity')"
-        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
-      />
-    </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Title 2
+                  </label>
+                  <input
+                    type="text"
+                    value={productAdditional.title2}
+                    onChange={(e) =>
+                      setProductAdditional((prev) => ({
+                        ...prev,
+                        title2: e.target.value,
+                      }))
+                    }
+                    placeholder="Secondary title (e.g., 'Modern Simplicity')"
+                    className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+                  />
+                </div>
 
-    <div className="space-y-1">
-      <label className="text-sm font-semibold text-gray-700">Subtitle 2</label>
-      <input
-        type="text"
-        value={productAdditional.subTitle2}
-        onChange={(e) =>
-          setProductAdditional((prev) => ({ ...prev, subTitle2: e.target.value }))
-        }
-        placeholder="Secondary subtitle"
-        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
-      />
-    </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Subtitle 2
+                  </label>
+                  <input
+                    type="text"
+                    value={productAdditional.subTitle2}
+                    onChange={(e) =>
+                      setProductAdditional((prev) => ({
+                        ...prev,
+                        subTitle2: e.target.value,
+                      }))
+                    }
+                    placeholder="Secondary subtitle"
+                    className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+                  />
+                </div>
 
-    <div className="space-y-1 md:col-span-2">
-      <label className="text-sm font-semibold text-gray-700">Description 2</label>
-      <textarea
-        value={productAdditional.description2}
-        onChange={(e) =>
-          setProductAdditional((prev) => ({ ...prev, description2: e.target.value }))
-        }
-        rows={4}
-        placeholder="Additional long description..."
-        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm resize-none"
-      />
-    </div>
-  </div>
-</div>   
-{/* Specifications (Optional) */}
-<div className="mt-8 space-y-4 bg-white rounded-2xl border border-gray-200 p-4 sm:p-6">
-  <div className="flex items-baseline justify-between">
-    <h3 className="text-lg font-bold text-gray-800">
-      Specifications <span className="text-gray-400 text-sm font-normal">(Optional)</span>
-    </h3>
-    <button
-      type="button"
-      onClick={() => setSpecs(prev => [...prev, { label: "", value: "" }])}
-      className="text-indigo-600 hover:underline text-sm font-semibold"
-    >
-      Add Row
-    </button>
-  </div>
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Description 2
+                  </label>
+                  <textarea
+                    value={productAdditional.description2}
+                    onChange={(e) =>
+                      setProductAdditional((prev) => ({
+                        ...prev,
+                        description2: e.target.value,
+                      }))
+                    }
+                    rows={4}
+                    placeholder="Additional long description..."
+                    className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+            {/* Specifications (Optional) */}
+            <div className="mt-8 space-y-4 bg-white rounded-2xl border border-gray-200 p-4 sm:p-6">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-bold text-gray-800">
+                  Specifications{" "}
+                  <span className="text-gray-400 text-sm font-normal">
+                    (Optional)
+                  </span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSpecs((prev) => [...prev, { label: "", value: "" }])
+                  }
+                  className="text-indigo-600 hover:underline text-sm font-semibold"
+                >
+                  Add Row
+                </button>
+              </div>
 
-  {specs.map((row, i) => (
-    <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-      <input
-        type="text"
-        placeholder="Label (e.g., Warranty)"
-        value={row.label}
-        onChange={(e) => {
-          const next = [...specs];
-          next[i].label = e.target.value;
-          setSpecs(next);
-        }}
-        className="md:col-span-5 border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-      />
-      <input
-        type="text"
-        placeholder="Value (e.g., 1 Year Manufacturer Warranty)"
-        value={row.value}
-        onChange={(e) => {
-          const next = [...specs];
-          next[i].value = e.target.value;
-          setSpecs(next);
-        }}
-        className="md:col-span-6 border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-      />
-      <div className="md:col-span-1 flex md:justify-end">
-        {specs.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setSpecs(prev => prev.filter((_, idx) => idx !== i))}
-            className="w-full md:w-auto px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 text-sm font-medium"
-            title="Remove"
-          >
-            Remove
-          </button>
-        )}
-      </div>
-    </div>
-  ))}
-</div>
+              {specs.map((row, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start"
+                >
+                  <input
+                    type="text"
+                    placeholder="Label (e.g., Warranty)"
+                    value={row.label}
+                    onChange={(e) => {
+                      const next = [...specs];
+                      next[i].label = e.target.value;
+                      setSpecs(next);
+                    }}
+                    className="md:col-span-5 border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Value (e.g., 1 Year Manufacturer Warranty)"
+                    value={row.value}
+                    onChange={(e) => {
+                      const next = [...specs];
+                      next[i].value = e.target.value;
+                      setSpecs(next);
+                    }}
+                    className="md:col-span-6 border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                  />
+                  <div className="md:col-span-1 flex md:justify-end">
+                    {specs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSpecs((prev) => prev.filter((_, idx) => idx !== i))
+                        }
+                        className="w-full md:w-auto px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 text-sm font-medium"
+                        title="Remove"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-{/* FAQs (Optional) */}
-<div className="mt-8 space-y-4 bg-white rounded-2xl border border-gray-200 p-4 sm:p-6">
-  <div className="flex items-baseline justify-between">
-    <h3 className="text-lg font-bold text-gray-800">
-      FAQs <span className="text-gray-400 text-sm font-normal">(Optional)</span>
-    </h3>
-    <button
-      type="button"
-      onClick={() => setFaqs(prev => [...prev, { question: "", answer: "" }])}
-      className="text-indigo-600 hover:underline text-sm font-semibold"
-    >
-      Add Question
-    </button>
-  </div>
+            {/* FAQs (Optional) */}
+            <div className="mt-8 space-y-4 bg-white rounded-2xl border border-gray-200 p-4 sm:p-6">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-bold text-gray-800">
+                  FAQs{" "}
+                  <span className="text-gray-400 text-sm font-normal">
+                    (Optional)
+                  </span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFaqs((prev) => [...prev, { question: "", answer: "" }])
+                  }
+                  className="text-indigo-600 hover:underline text-sm font-semibold"
+                >
+                  Add Question
+                </button>
+              </div>
 
-  {faqs.map((f, i) => (
-    <div key={i} className="space-y-2 rounded-xl p-4">
-      <input
-        type="text"
-        placeholder="Question"
-        value={f.question}
-        onChange={(e) => {
-          const next = [...faqs];
-          next[i].question = e.target.value;
-          setFaqs(next);
-        }}
-        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-      />
-      <textarea
-        rows={3}
-        placeholder="Answer"
-        value={f.answer}
-        onChange={(e) => {
-          const next = [...faqs];
-          next[i].answer = e.target.value;
-          setFaqs(next);
-        }}
-        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm resize-none"
-      />
-      <div className="flex justify-end">
-        {faqs.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setFaqs(prev => prev.filter((_, idx) => idx !== i))}
-            className="px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 text-sm font-medium"
-            title="Remove FAQ"
-          >
-            Remove
-          </button>
-        )}
-      </div>
-    </div>
-  ))}
-</div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-           
-
+              {faqs.map((f, i) => (
+                <div key={i} className="space-y-2 rounded-xl p-4">
+                  <input
+                    type="text"
+                    placeholder="Question"
+                    value={f.question}
+                    onChange={(e) => {
+                      const next = [...faqs];
+                      next[i].question = e.target.value;
+                      setFaqs(next);
+                    }}
+                    className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                  />
+                  <textarea
+                    rows={3}
+                    placeholder="Answer"
+                    value={f.answer}
+                    onChange={(e) => {
+                      const next = [...faqs];
+                      next[i].answer = e.target.value;
+                      setFaqs(next);
+                    }}
+                    className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm resize-none"
+                  />
+                  <div className="flex justify-end">
+                    {faqs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFaqs((prev) => prev.filter((_, idx) => idx !== i))
+                        }
+                        className="px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 text-sm font-medium"
+                        title="Remove FAQ"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                   <Image className="w-4 h-4 text-pink-600" />
@@ -597,145 +666,159 @@ setFaqs(
                 </label>
               </div>
               {/* 🔹 Product PDF Upload */}
-<div className="space-y-2">
-  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-    <FileText className="w-4 h-4 text-red-600" />
-    Product PDF <span className="text-gray-400 text-xs">(Optional)</span>
-  </label>
-  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 p-4 sm:p-6 rounded-xl cursor-pointer hover:border-red-500 hover:bg-red-50 transition-all group">
-    <Upload size={24} className="text-red-600 group-hover:scale-110 transition-transform" />
-    <span className="text-xs sm:text-sm text-gray-600 font-medium text-center">
-      Click to upload PDF file
-    </span>
-    <span className="text-xs text-gray-400">Only .pdf files</span>
-    <input
-      type="file"
-      accept="application/pdf"
-      className="hidden"
-      onChange={(e) => {
-        const file = e.target.files[0];
-        if (file) setPdfFile(file);
-      }}
-    />
-  </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <FileText className="w-4 h-4 text-red-600" />
+                  Product PDF{" "}
+                  <span className="text-gray-400 text-xs">(Optional)</span>
+                </label>
+                <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 p-4 sm:p-6 rounded-xl cursor-pointer hover:border-red-500 hover:bg-red-50 transition-all group">
+                  <Upload
+                    size={24}
+                    className="text-red-600 group-hover:scale-110 transition-transform"
+                  />
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium text-center">
+                    Click to upload PDF file
+                  </span>
+                  <span className="text-xs text-gray-400">Only .pdf files</span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) setPdfFile(file);
+                    }}
+                  />
+                </label>
 
-  {pdfFile && (
-    <div className="flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-lg mt-2">
-      <div className="flex items-center gap-2">
-        <FileText className="w-5 h-5 text-red-600" />
-        <span className="text-sm text-gray-700">{pdfFile.name}</span>
-      </div>
-      <button
-        type="button"
-        onClick={() => setPdfFile(null)}
-        className="text-red-500 hover:text-red-700 transition-colors"
-      >
-        <X size={16} />
-      </button>
-    </div>
-  )}
+                {pdfFile && (
+                  <div className="flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-lg mt-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-red-600" />
+                      <span className="text-sm text-gray-700">
+                        {pdfFile.name}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPdfFile(null)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
 
-  {pdfUrl && !pdfFile && (
-    <div className="flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-lg mt-2">
-      <div className="flex items-center gap-2">
-        <FileText className="w-5 h-5 text-green-600" />
-        <a
-          href={getFullImageUrl(pdfUrl)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-green-700 underline"
-        >
-          View PDF
-        </a>
-      </div>
-      <button
-        type="button"
-        onClick={() => setPdfUrl("")}
-        className="text-red-500 hover:text-red-700 transition-colors"
-      >
-        <X size={16} />
-      </button>
-    </div>
-  )}
-</div>
-{/* Image Preview (existing + new) */}
-{(existingImages.filter(u => typeof u === 'string' && !u.toLowerCase().endsWith('.pdf')).length > 0 || files.length > 0) && (
-  <div className="space-y-3">
-    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-      <Image className="w-4 h-4 text-purple-600" />
-      Image Preview ({existingImages.length + files.length} images)
-    </label>
+                {pdfUrl && !pdfFile && (
+                  <div className="flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-lg mt-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-green-600" />
+                      <a
+                        href={getFullImageUrl(pdfUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-green-700 underline"
+                      >
+                        View PDF
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPdfUrl("")}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Image Preview (existing + new) */}
+              {(existingImages.filter(
+                (u) =>
+                  typeof u === "string" && !u.toLowerCase().endsWith(".pdf")
+              ).length > 0 ||
+                files.length > 0) && (
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <Image className="w-4 h-4 text-purple-600" />
+                    Image Preview ({existingImages.length + files.length}{" "}
+                    images)
+                  </label>
 
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 p-4 bg-gray-50 rounded-xl">
-      {/* Saved images */}
-      {existingImages
-        .filter(u => typeof u === 'string' && !u.toLowerCase().endsWith('.pdf'))
-        .map((img, index) => {
-          const imageUrl = getFullImageUrl(img);
-          return (
-            <div
-              key={`${img}-${index}`}
-              className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition"
-            >
-              <img
-                src={imageUrl}
-                alt="product"
-                loading="lazy"
-                crossOrigin="anonymous"
-                className="absolute inset-0 w-full h-full object-contain bg-gray-100"
-                onError={(e) => {
-                  console.warn('Image failed to load:', imageUrl);
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement.innerHTML =
-                    '<div class="flex items-center justify-center w-full h-full text-4xl bg-gray-100">📦</div>';
-                }}
-              />
-              <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition" />
-              <button
-                type="button"
-                onClick={() => removeExistingImage(img)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition"
-                title="Remove image"
-              >
-                <X size={14} />
-              </button>
-              <span className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-md font-medium">
-                Saved
-              </span>
-            </div>
-          );
-        })}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 p-4 bg-gray-50 rounded-xl">
+                    {/* Saved images */}
+                    {existingImages
+                      .filter(
+                        (u) =>
+                          typeof u === "string" &&
+                          !u.toLowerCase().endsWith(".pdf")
+                      )
+                      .map((img, index) => {
+                        const imageUrl = getFullImageUrl(img);
+                        return (
+                          <div
+                            key={`${img}-${index}`}
+                            className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition"
+                          >
+                            <img
+                              src={imageUrl}
+                              alt="product"
+                              loading="lazy"
+                              crossOrigin="anonymous"
+                              className="absolute inset-0 w-full h-full object-contain bg-gray-100"
+                              onError={(e) => {
+                                console.warn("Image failed to load:", imageUrl);
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.parentElement.innerHTML =
+                                  '<div class="flex items-center justify-center w-full h-full text-4xl bg-gray-100">📦</div>';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition" />
+                            <button
+                              type="button"
+                              onClick={() => removeExistingImage(img)}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition"
+                              title="Remove image"
+                            >
+                              <X size={14} />
+                            </button>
+                            <span className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-md font-medium">
+                              Saved
+                            </span>
+                          </div>
+                        );
+                      })}
 
-      {/* Newly added (not yet uploaded) images */}
-      {files.map((file, idx) => (
-        <div
-          key={idx}
-          className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition"
-        >
-          <img
-            src={URL.createObjectURL(file)}
-            alt="preview"
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-contain bg-gray-100"
-          />
-          <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition" />
-          <button
-            type="button"
-            onClick={() => removeNewFile(idx)}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition"
-            title="Remove image"
-          >
-            <X size={14} />
-          </button>
-          <span className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-md font-medium">
-            New
-          </span>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
+                    {/* Newly added (not yet uploaded) images */}
+                    {files.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition"
+                      >
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="preview"
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-contain bg-gray-100"
+                        />
+                        <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition" />
+                        <button
+                          type="button"
+                          onClick={() => removeNewFile(idx)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition"
+                          title="Remove image"
+                        >
+                          <X size={14} />
+                        </button>
+                        <span className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-md font-medium">
+                          New
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
               <button
@@ -787,8 +870,10 @@ setFaqs(
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {data?.items?.map((p) => {
-                const productImageUrl = p.images?.[0] ? getFullImageUrl(p.images[0]) : null;
-                
+                const productImageUrl = p.images?.[0]
+                  ? getFullImageUrl(p.images[0])
+                  : null;
+
                 return (
                   <div
                     key={p._id}
@@ -802,8 +887,9 @@ setFaqs(
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
+                            e.target.style.display = "none";
+                            e.target.parentElement.innerHTML =
+                              '<div class="w-full h-full flex items-center justify-center"><svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
                           }}
                         />
                       ) : (
@@ -839,12 +925,22 @@ setFaqs(
                         </p>
                       </div>
 
-                      <button
-                        onClick={() => handleEdit(p)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm"
-                      >
-                        <Pencil size={16} /> Edit Product
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(p)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm"
+                        >
+                          <Pencil size={16} /> Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(p._id)}
+                          disabled={deleting}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm disabled:opacity-50"
+                        >
+                          <X size={16} /> {deleting ? "Deleting..." : "Delete"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

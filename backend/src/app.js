@@ -1,48 +1,79 @@
-// src/app.js
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// -----------------------------
+//  Core Imports
+// -----------------------------
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
-// Routes
-import authRoutes from './routes/auth.routes.js';
-import userRoutes from './routes/user.routes.js';
-import categoryRoutes from './routes/category.routes.js';
-import productRoutes from './routes/product.routes.js';
-import uploadRoutes from './routes/upload.routes.js';
-import contactRoutes from './routes/contact.routes.js';
+// -----------------------------
+//  Local Imports
+// -----------------------------
+import connectDB from "./config/db.js";
+
+// Route Imports
+import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import categoryRoutes from "./routes/category.routes.js";
+import productRoutes from "./routes/product.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
 
 // Middleware
-import errorHandler from './middleware/errorHandler.js';
+import errorHandler from "./middleware/errorHandler.js";
 
+// -----------------------------
+//  Environment Setup
+// -----------------------------
+dotenv.config();
+connectDB();
+
+// -----------------------------
+//  Initialize Express App
+// -----------------------------
 const app = express();
 
-// Global middleware
-app.use(cors({ origin: '*' }));
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// -----------------------------
+//  Global Middleware
+// -----------------------------
+app.use(cors()); // allow frontend requests
+// app.use(helmet()); // secure HTTP headers
+app.use(morgan("dev")); // log all requests
+app.use(express.json()); // parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // parse form-data
 
-// If you still want a local static (optional, server.js already serves /uploads)
-// Keep at most ONE of these or let server.js handle it.
+// -----------------------------
+//  Static File Setup (uploads folder)
+// -----------------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// -----------------------------
+//  API Routes
+// -----------------------------
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/contact", contactRoutes);
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/contact', contactRoutes);
-
-// Health check
-app.get('/', (_req, res) => res.json({ message: 'API is running successfully 🚀' }));
-
-// Errors
+// -----------------------------
+//  Error Handling Middleware
+// -----------------------------
 app.use(errorHandler);
 
+// -----------------------------
+//  Health Check Route
+// -----------------------------
+app.get("/", (req, res) => {
+  res.json({ message: "API is running successfully 🚀" });
+});
+
+// -----------------------------
+//  Export App
+// -----------------------------
 export default app;

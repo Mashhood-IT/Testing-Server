@@ -5,18 +5,17 @@ import {
   useGetProductsQuery,
 } from "../features/catalog/catalogApi";
 
+const API_BASE_URL = "http://localhost:5000";
 
 const CategoryPage = () => {
   const { id } = useParams();
 
   const { data: categoriesData } = useGetCategoriesQuery();
 
-const {data:productsData, isLoading, error} = useGetProductsQuery()
+  const { data: productsData, isLoading, error } = useGetProductsQuery();
   const categories = Array.isArray(categoriesData)
     ? categoriesData
     : categoriesData?.categories || [];
-
-  
 
   const products = Array.isArray(productsData?.items)
     ? productsData.items
@@ -37,7 +36,7 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
 
     if (imageUrl) {
       if (imageUrl.startsWith("/")) {
-        return `${import.meta.env.VITE_API_URL}${imageUrl}`;
+        return `${API_BASE_URL}${imageUrl}`;
       }
       return imageUrl;
     }
@@ -45,8 +44,6 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
     return "/placeholder.png";
   };
 
-
-  
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -70,12 +67,26 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-8 h-8 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Oops! Something went wrong</h3>
-          <p className="text-gray-600">{error?.data?.message || error?.message || error?.data || "Unable to load products"}</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            Oops! Something went wrong
+          </h3>
+          <p className="text-gray-600">
+            {error?.data?.message || "Unable to load products"}
+          </p>
         </div>
       </div>
     );
@@ -86,13 +97,30 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-8 h-8 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Category Not Found</h3>
-          <p className="text-gray-600 mb-6">The category you're looking for doesn't exist</p>
-          <Link to="/" className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            Category Not Found
+          </h3>
+          <p className="text-gray-600 mb-6">
+            The category you're looking for doesn't exist
+          </p>
+          <Link
+            to="/"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+          >
             Back to Home
           </Link>
         </div>
@@ -118,30 +146,52 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
           </p>
         </div>
 
-    
         {/* Products Section */}
         <div>
-          <div className="flex items-center justify-between mb-6 sm:mb-8">
-          
-            <span className="text-sm sm:text-base text-gray-600 bg-white px-3 sm:px-4 py-1 sm:py-2 rounded-full shadow-md">
-              {products.length} {products.length === 1 ? "item" : "items"}
+          <div className="flex items-center justify-between mb-8 sm:mb-10">
+            <span className="text-sm sm:text-base text-gray-700 font-semibold bg-gradient-to-r from-white to-purple-50 px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg border border-purple-100 flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
+              </svg>
+              {products.length} {products.length === 1 ? "Product" : "Products"}
             </span>
           </div>
 
           {products.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-7">
               {products.map((p) => (
                 <Link
                   key={p._id}
                   to={`/product/${p._id}`}
-                  className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
+                  className="group relative bg-white rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden border border-gray-100"
                 >
-                  <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4 sm:p-6">
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/0 to-purple-400/0 group-hover:from-indigo-400/20 group-hover:to-purple-400/20 transition-all duration-300"></div>
+                  {/* Image Container */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-6 sm:p-8">
+                    {/* Animated Background Circles */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-purple-300 rounded-full blur-2xl"></div>
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-300 rounded-full blur-2xl"></div>
+                    </div>
+
+                    {/* New Badge */}
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                      New
+                    </div>
+
                     <img
                       src={getProductImage(p)}
                       alt={p.title || p.name}
-                      className="w-full h-32 sm:h-40 lg:h-48 object-contain mx-auto transform group-hover:scale-110 transition-transform duration-300"
+                      className="relative w-full h-32 sm:h-40 lg:h-48 object-contain mx-auto transform group-hover:scale-110 transition-transform duration-500 drop-shadow-lg"
                       onError={(e) => {
                         if (
                           e.target.src !==
@@ -152,32 +202,73 @@ const {data:productsData, isLoading, error} = useGetProductsQuery()
                       }}
                     />
                   </div>
-                  
-                  <div className="p-3 sm:p-4">
-                    <h3 className="font-bold text-gray-900 text-sm sm:text-base line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
+
+                  {/* Product Info */}
+                  <div className="p-4 sm:p-5 space-y-3">
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg line-clamp-2 group-hover:text-purple-600 transition-colors duration-300 min-h-[2.5rem]">
                       {p.title || p.name}
                     </h3>
-                    
-                    <div className="flex items-center justify-between">
-          
-                      <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+
+                    <div className="flex items-center justify-between pt-2">
+                      {/* View Details Button */}
+                      <span className="text-sm font-semibold text-purple-600 group-hover:text-purple-700 transition-colors flex items-center gap-1">
+                        View Details
+                      </span>
+
+                      {/* Animated Arrow */}
+                      <div className="w-9 h-9 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-3 group-hover:translate-x-0 transition-all duration-300 shadow-lg">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
                   </div>
+
+                  {/* Bottom Gradient Line */}
+                  <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-lg p-12 sm:p-16 text-center">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
+            <div className="bg-gradient-to-br from-white to-purple-50 rounded-3xl shadow-2xl p-12 sm:p-20 text-center border border-purple-100">
+              {/* Icon Container */}
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-8">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full animate-pulse"></div>
+                <div className="relative w-full h-full bg-gradient-to-br from-purple-50 to-blue-50 rounded-full flex items-center justify-center shadow-lg">
+                  <svg
+                    className="w-12 h-12 sm:w-16 sm:h-16 text-purple-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                    />
+                  </svg>
+                </div>
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">No Products Found</h3>
+
+              {/* Text Content */}
+              <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+                No Products Found
+              </h3>
+              <p className="text-gray-600 text-sm sm:text-base max-w-md mx-auto">
+                We couldn't find any products in this category. Try exploring
+                other categories or check back later!
+              </p>
             </div>
           )}
         </div>

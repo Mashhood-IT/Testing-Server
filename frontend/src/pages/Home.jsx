@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ProductSection from "../components/ProductSection";
 import EcommerceHero from "../components/EcommerceHero";
 import { Link } from "react-router-dom";
-import ClientSlider from "../components/ClientSlider";
+import ClientSlider from "../components/CLientSlider";
 import ModernEcommerce from "../components/ModernEcommerce";
 import ACSServices from "../components/ACSServices";
 
