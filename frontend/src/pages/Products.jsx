@@ -21,7 +21,7 @@ import {
   Layers,
   AlertCircle,
 } from "lucide-react";
-
+import {toast} from "react-toastify";
 const API_BASE_URL = "http://localhost:5000";
 
 const getFullImageUrl = (imagePath) => {
@@ -163,18 +163,13 @@ export default function Products() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
-    );
-    if (!confirmDelete) return;
-
     try {
       await deleteProduct(id).unwrap();
-      alert("Product deleted successfully!");
+      toast.success("Product deleted successfully!");
       refetch();
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("Failed to delete product. Please try again.");
+      toast.error("Failed to delete product. Please try again.");
     }
   };
 

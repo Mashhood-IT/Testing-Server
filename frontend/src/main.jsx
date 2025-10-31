@@ -22,6 +22,7 @@ import ACSServices from "./components/ACSServices";
 import FirstProductPage from "./pages/FirstProductPage";
 import SecondProductPage from "./pages/SecondProductPage";
 import ThirdProductPage from "./pages/ThirdProductPage";
+import { ToastContainer } from "react-toastify";
 
 const Private = ({ children }) => {
   const token = useSelector((s) => s.auth.token);
@@ -30,6 +31,7 @@ const Private = ({ children }) => {
 
 const Shell = ({ children, privateRoute = false }) => (
   <div className="min-h-screen">
+    <ToastContainer/>
     <Navbar />
     <div>{privateRoute ? <Private>{children}</Private> : children}</div>
     {/* <Footer /> */}
