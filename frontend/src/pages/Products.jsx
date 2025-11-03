@@ -22,7 +22,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 import {toast} from "react-toastify";
-const API_BASE_URL = "http://localhost:5000";
 
 const getFullImageUrl = (imagePath) => {
   if (!imagePath) return null;
@@ -33,7 +32,7 @@ const getFullImageUrl = (imagePath) => {
 
   // some backends store as '/uploads/...' or 'uploads/...'
   const clean = raw.replace(/^\/+/, "");
-  return `${API_BASE_URL}/${clean}`;
+  return `${import.meta.env.VITE_API_URL}/${clean}`;
 };
 export default function Products() {
   const [page, setPage] = useState(1);
@@ -104,7 +103,7 @@ export default function Products() {
     if (pdfFile) {
       const pdfForm = new FormData();
       pdfForm.append("pdf", pdfFile);
-      const pdfUploadResponse = await fetch(`${API_BASE_URL}/api/upload/pdf`, {
+      const pdfUploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/upload/pdf`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

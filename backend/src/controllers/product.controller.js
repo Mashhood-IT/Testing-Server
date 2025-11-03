@@ -149,31 +149,29 @@ export const remove = async (req, res, next) => {
 };
 
 
+// products.controller.js
 export const getProductPdf = async (req, res, next) => {
   try {
     const { id } = req.params;
     const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product.pdf) return res.status(404).json({ message: "PDF not found for this product" });
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    // If it's a URL, just redirect
+    if (/^https?:\/\//i.test(product.pdf)) {
+      return res.redirect(product.pdf);
     }
 
-    if (!product.pdf) {
-      return res.status(404).json({ message: "PDF not found for this product" });
-    }
-
-    // product.pdf example: "/uploads/products/pdf/1761205775274-548978769.pdf"
-    const pdfPath = path.join(process.cwd(), product.pdf);
+    // Otherwise treat as local relative path
+    const pdfPath = path.isAbsolute(product.pdf)
+      ? product.pdf
+      : path.join(process.cwd(), product.pdf);
 
     if (!fs.existsSync(pdfPath)) {
       return res.status(404).json({ message: "PDF file not found on server" });
     }
 
-    res.download(pdfPath, (err) => {
-      if (err) {
-        next(err);
-      }
-    });
+    return res.download(pdfPath, path.basename(pdfPath));
   } catch (error) {
     next(error);
   }

@@ -28,13 +28,12 @@ import {
 } from "lucide-react";
 
 
-const API_BASE_URL = 'http://localhost:5000';
 
 const getFullImageUrl = (imagePath) => {
   if (!imagePath) return null;
   if (imagePath.startsWith('http')) return imagePath;
-  if (imagePath.startsWith('/')) return `${API_BASE_URL}${imagePath}`;
-  return `${API_BASE_URL}/${imagePath}`;
+  if (imagePath.startsWith('/')) return `${import.meta.env.VITE_API_URL}${imagePath}`;
+  return `${import.meta.env.VITE_API_URL}/${imagePath}`;
 };
 
 export default function ProductDetail({ images = [] }) {
@@ -147,36 +146,30 @@ Please confirm my order!`;
   }
 }, [currentProduct]);
 
-  const downloadPdf = async () => {
+const downloadPdf = async () => {
   if (!currentProduct?._id) return;
-
   try {
-    const response = await fetch(`${API_BASE_URL}/api/products/${currentProduct._id}/pdf`, {
-      method: 'GET',
-    });
+    const url = `${import.meta.env.VITE_API_URL}/products/${currentProduct._id}/pdf`;
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch PDF');
+    const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+
+    if (!res.ok) {
+      const msg = await res.text().catch(() => '');
+      throw new Error(`Download failed (${res.status}) ${msg}`);
     }
 
-    const blob = await response.blob();
-
-    // Create a link element, trigger download
-    const url = window.URL.createObjectURL(blob);
+    // If server redirected to a Cloudinary URL, fetch may have followed it.
+    const blob = await res.blob();
     const a = document.createElement('a');
-    a.href = url;
-
-    // You can customize filename here
+    a.href = URL.createObjectURL(blob);
     a.download = `${currentProduct.title}.pdf`;
     document.body.appendChild(a);
     a.click();
-
-    // Cleanup
     a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Error downloading PDF:', error);
-    alert('Failed to download PDF. Please try again later.');
+    URL.revokeObjectURL(a.href);
+  } catch (err) {
+    console.error('Error downloading PDF:', err);
+    alert('Failed to download PDF. The file may be missing.');
   }
 };
 
